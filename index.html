@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#111827" />
+<title>Bulk OS</title>
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --panel:#ffffff;
+    --panel2:#f8fafc;
+    --text:#18212f;
+    --muted:#687386;
+    --border:#dde3ea;
+    --accent:#2f6f5e;
+    --accent2:#e7f2ee;
+    --danger:#a33d3d;
+    --warning:#a26721;
+    --shadow:0 10px 30px rgba(18, 28, 45, .07);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .app{min-height:100vh}
+  header{
+    position:sticky;top:0;z-index:20;
+    background:rgba(244,246,248,.92);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar{max-width:1200px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:38px;height:38px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:white;font-weight:800}
+  h1{font-size:18px;margin:0}
+  .sub{font-size:12px;color:var(--muted)}
+  .nav{display:flex;gap:6px;overflow:auto;padding:0 20px 12px;max-width:1200px;margin:auto}
+  .nav button{border:0;background:transparent;padding:9px 12px;border-radius:999px;color:var(--muted);white-space:nowrap}
+  .nav button.active{background:var(--text);color:#fff}
+  main{max-width:1200px;margin:auto;padding:22px 20px 50px}
+  .view{display:none}.view.active{display:block}
+  .grid{display:grid;gap:16px}
+  .grid-4{grid-template-columns:repeat(4,1fr)}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  .grid-2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+  .card h2,.card h3{margin:0 0 8px}
+  .card h2{font-size:18px}.card h3{font-size:15px}
+  .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+  .metric{font-size:30px;font-weight:800;letter-spacing:-.03em;margin-top:7px}
+  .metric small{font-size:13px;color:var(--muted);font-weight:600}
+  .muted{color:var(--muted)}
+  .section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:4px 0 14px}
+  .section-title h2{margin:0;font-size:23px;letter-spacing:-.02em}
+  .section-title p{margin:4px 0 0;color:var(--muted)}
+  .progress{height:10px;background:#edf0f3;border-radius:999px;overflow:hidden}
+  .progress > div{height:100%;background:var(--accent);border-radius:inherit}
+  .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--panel2);border-radius:999px;padding:6px 9px;font-size:12px}
+  .btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:9px 12px;border-radius:10px;font-weight:650}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:white}
+  .btn.danger{color:var(--danger)}
+  .btn.small{padding:6px 9px;font-size:12px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .spacer{flex:1}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 8px;border-bottom:1px solid var(--border)}
+  td{padding:10px 8px;border-bottom:1px solid #edf0f3;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  input,select{
+    width:100%;border:1px solid var(--border);border-radius:9px;background:white;color:var(--text);padding:8px 9px;outline:none;
+  }
+  input:focus,select:focus{border-color:#8db9aa;box-shadow:0 0 0 3px rgba(47,111,94,.09)}
+  .money{max-width:105px}
+  .qty{max-width:80px}
+  .check{width:18px;height:18px}
+  .grocery-done td{opacity:.46}.grocery-done .item-name{text-decoration:line-through}
+  .table-wrap{overflow:auto}
+  .note{padding:12px 14px;background:var(--accent2);border:1px solid #cfe3db;border-radius:12px;color:#31584d;font-size:13px}
+  .warning{background:#fff7ea;border-color:#eed9b5;color:#6d4a1b}
+  .workout-toggle{display:flex;gap:8px;margin-bottom:12px}
+  .workout-toggle button{flex:1}
+  .exercise-card{border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;background:var(--panel2)}
+  .exercise-head{display:flex;gap:12px;justify-content:space-between;align-items:start}
+  .exercise-title{font-weight:750}
+  .exercise-meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .set-grid{display:grid;grid-template-columns:52px 1fr 1fr 1fr;gap:7px;align-items:center;margin-top:11px}
+  .set-grid .label{font-size:12px;color:var(--muted)}
+  .set-grid input{padding:7px}
+  .stat-list{display:grid;gap:10px}
+  .stat-line{display:flex;justify-content:space-between;gap:12px}
+  .chart{height:180px;display:flex;align-items:flex-end;gap:7px;padding-top:15px;border-bottom:1px solid var(--border)}
+  .bar{flex:1;min-width:8px;background:var(--accent);border-radius:5px 5px 0 0;position:relative;opacity:.85}
+  .bar:hover{opacity:1}
+  .bar span{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#111827;color:white;padding:4px 6px;border-radius:6px;font-size:10px;white-space:nowrap}
+  .bar:hover span{display:block}
+  .empty{padding:25px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:12px}
+  .footer-note{margin-top:18px;color:var(--muted);font-size:12px}
+  .today-card{background:linear-gradient(135deg,#18302a,#2f6f5e);color:white;border:0}
+  .today-card .muted{color:#d4e6df}
+  .today-card .pill{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:white}
+  @media(max-width:900px){.grid-4,.grid-3{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:650px){
+    .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+    main{padding:16px 12px 40px}.topbar{padding:12px}.nav{padding:0 12px 10px}
+    .metric{font-size:26px}
+    th,td{padding:8px 6px;font-size:13px}
+    .hide-mobile{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">B</div>
+      <div><h1>Bulk OS</h1><div class="sub">Fitness, groceries, workouts & budget</div></div>
+    </div>
+    <div class="row">
+      <button class="btn small" id="exportBtn">Export</button>
+      <label class="btn small" for="importFile">Import</label>
+      <input id="importFile" type="file" accept=".json" style="display:none">
+    </div>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="budget">Budget</button>
+    <button data-view="groceries">Groceries</button>
+    <button data-view="workout">Workout</button>
+    <button data-view="progress">Progress</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+</header>
+
+<main>
+<section id="dashboard" class="view active">
+  <div class="section-title">
+    <div><h2>Your bulk dashboard</h2><p>One place to keep the plan moving.</p></div>
+    <span class="pill" id="datePill"></span>
+  </div>
+  <div class="grid grid-4">
+    <div class="card"><div class="eyebrow">Current weight</div><div class="metric" id="dashWeight">120 <small>lb</small></div><div class="muted" id="dashWeightSub">Goal: 130 lb</div></div>
+    <div class="card"><div class="eyebrow">Protein target</div><div class="metric"><span id="dashProtein">90–120</span> <small>g/day</small></div><div class="muted">Food first; plant powder optional</div></div>
+    <div class="card"><div class="eyebrow">Weekly groceries</div><div class="metric">$<span id="dashGroceries">89.65</span></div><div class="muted">Estimated checkout</div></div>
+    <div class="card"><div class="eyebrow">Monthly free cash</div><div class="metric">$<span id="dashBuffer">0</span></div><div class="muted">Income − expenses − allocations</div></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card today-card">
+      <div class="eyebrow" style="color:#b9d5cc">Training</div>
+      <h2 style="margin-top:6px" id="todayWorkout">Workout A</h2>
+      <p class="muted" id="todayWorkoutSub">Alternate A / B across 3 training days per week.</p>
+      <div class="row" style="margin-top:14px">
+        <span class="pill">3× / week</span><span class="pill">2–3 RIR</span><span class="pill">Progressive overload</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Weight goal</div>
+      <div class="row" style="margin:8px 0"><strong id="goalProgressText">120 → 130 lb</strong><span class="spacer"></span><span class="muted" id="goalPct">0%</span></div>
+      <div class="progress"><div id="goalProgressBar" style="width:0%"></div></div>
+      <div class="note" style="margin-top:14px">Target pace: <strong>+0.25–0.5 lb/week</strong>. If your 2–3 week trend is flat, add roughly 150–200 calories/day.</div>
+    </div>
+  </div>
+
+  <div class="grid grid-3" style="margin-top:16px">
+    <div class="card"><h3>Training rule</h3><p class="muted">You do not need failure on every set. Most working sets should stop with 1–3 clean reps left.</p></div>
+  </div>
+</section>
+
+<section id="budget" class="view">
+  <div class="section-title"><div><h2>Monthly budget</h2><p>Edit any number; totals recalculate automatically.</p></div></div>
+  <div class="grid grid-3">
+    <div class="card"><div class="eyebrow">Net income</div><div class="metric">$<span id="budgetIncomeMetric"></span></div></div>
+    <div class="card"><div class="eyebrow">Expenses</div><div class="metric">$<span id="budgetExpenseMetric"></span></div></div>
+    <div class="card"><div class="eyebrow">Savings allocation</div><div class="metric">$<span id="budgetSavingsMetric"></span></div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="table-wrap"><table><thead><tr><th>Section</th><th>Category</th><th>Monthly amount</th></tr></thead><tbody id="budgetBody"></tbody></table></div>
+  </div>
+</section>
+
+<section id="groceries" class="view">
+  <div class="section-title">
+    <div><h2>Weekly groceries</h2><p>Check items off while shopping; edit prices and quantities in real time.</p></div>
+    <button class="btn" id="resetGroceries">Reset checklist</button>
+  </div>
+  <div class="grid grid-3">
+    <div class="card"><div class="eyebrow">Estimated checkout</div><div class="metric">$<span id="groceryTotal"></span></div></div>
+    <div class="card"><div class="eyebrow">Monthly equivalent</div><div class="metric">$<span id="groceryMonthly"></span></div><div class="muted">Weekly × 4.33</div></div>
+    <div class="card"><div class="eyebrow">Items checked</div><div class="metric"><span id="groceryChecked"></span></div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Category</th><th>Item</th><th>Qty</th><th class="hide-mobile">Unit</th><th>Unit price</th><th>Cost</th><th class="hide-mobile">Notes</th></tr></thead>
+        <tbody id="groceryBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="note" style="margin-top:14px">Rice, oats, peanut butter, oil and seasonings may last longer than one week, so your true recurring consumption cost can be lower than the checkout total.</div>
+</section>
+
+<section id="workout" class="view">
+  <div class="section-title"><div><h2>Workout</h2><p>Log the session and use double progression instead of chasing exhaustion.</p></div></div>
+  <div class="grid grid-2">
+    <div>
+      <div class="workout-toggle">
+        <button class="btn primary" data-workout="A">Workout A</button>
+        <button class="btn" data-workout="B">Workout B</button>
+      </div>
+      <div id="exerciseList"></div>
+      <button class="btn primary" id="saveWorkout" style="width:100%">Save workout session</button>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3>How hard should you train?</h3>
+        <p class="muted">Use <strong>2–3 RIR</strong> on most compounds. On safer isolation or machine work, the last set can occasionally reach <strong>0–1 RIR</strong> after your technique is consistent.</p>
+        <div class="note warning">RIR = “reps in reserve.” If you could do 2 more clean reps, that set was about 2 RIR. Stop when form starts breaking.</div>
+      </div>
+      <div class="card">
+        <h3>Progression rule</h3>
+        <p class="muted">Keep the same weight until you reach the top of the prescribed rep range on all working sets with good form. Then increase by the smallest practical increment.</p>
+        <div id="lastSessionSummary" class="empty">No sessions logged yet.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="progress" class="view">
+  <div class="section-title"><div><h2>Progress</h2><p>Track morning body weight and watch the trend, not one noisy day.</p></div></div>
+  <div class="grid grid-3">
+    <div class="card"><div class="eyebrow">Latest weight</div><div class="metric"><span id="latestWeight">—</span> <small>lb</small></div></div>
+    <div class="card"><div class="eyebrow">7-day average</div><div class="metric"><span id="avg7">—</span> <small>lb</small></div></div>
+    <div class="card"><div class="eyebrow">Change vs first log</div><div class="metric"><span id="weightChange">—</span> <small>lb</small></div></div>
+  </div>
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h3>Add weigh-in</h3>
+      <div class="row" style="margin-top:12px">
+        <div style="flex:1"><label class="muted">Date</label><input type="date" id="weighDate"></div>
+        <div style="flex:1"><label class="muted">Weight (lb)</label><input type="number" id="weighWeight" step="0.1" min="50" max="500"></div>
+      </div>
+      <button class="btn primary" id="addWeight" style="margin-top:12px;width:100%">Add weigh-in</button>
+      <div id="weightChart" class="chart" style="margin-top:18px"></div>
+    </div>
+    <div class="card">
+      <h3>Recent weigh-ins</h3>
+      <div id="weightHistory"></div>
+    </div>
+  </div>
+</section>
+
+<section id="settings" class="view">
+  <div class="section-title"><div><h2>Settings & data</h2><p>Everything lives in your browser unless you export it.</p></div></div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Fitness goal</h3>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div><label class="muted">Starting weight</label><input id="startWeight" type="number" step="0.1"></div>
+        <div><label class="muted">Goal weight</label><input id="goalWeight" type="number" step="0.1"></div>
+        <div><label class="muted">Protein minimum</label><input id="proteinMin" type="number"></div>
+        <div><label class="muted">Protein maximum</label><input id="proteinMax" type="number"></div>
+      </div>
+      <button class="btn primary" id="saveSettings" style="margin-top:12px">Save settings</button>
+    </div>
+    <div class="card">
+      <h3>Persistence</h3>
+      <p class="muted">This app uses <strong>localStorage</strong>. It survives refreshes on the same browser/device, but it does not sync across devices.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="exportBtn2">Export JSON backup</button>
+        <button class="btn danger" id="resetAll">Reset app data</button>
+      </div>
+      <div class="footer-note">For GitHub Pages, save this file as <strong>index.html</strong> in your repository. No backend or build step is required.</div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const STORAGE_KEY = "bulkOS_v1";
+
+const DEFAULT = {
+  settings:{startWeight:120, goalWeight:130, proteinMin:90, proteinMax:120},
+  budget:[
+    {section:"INCOME",category:"Net Pay after 401k",amount:9040},
+    {section:"EXPENSES",category:"Rent + parking",amount:3900},
+    {section:"EXPENSES",category:"Utilities, internet, renters insurance",amount:200},
+    {section:"EXPENSES",category:"Groceries",amount:450},
+    {section:"EXPENSES",category:"Eating out budget",amount:500},
+    {section:"EXPENSES",category:"Car insurance, charging, maintenance",amount:300},
+    {section:"EXPENSES",category:"Muni + BART A Pass",amount:104},
+    {section:"EXPENSES",category:"Phone + subscriptions",amount:100},
+    {section:"EXPENSES",category:"Shopping, entertainment, miscellaneous",amount:300},
+    {section:"EXPENSES",category:"Travel / annual expenses fund",amount:300},
+    {section:"SAVINGS ALLOCATION",category:"Investments",amount:2000},
+    {section:"SAVINGS ALLOCATION",category:"Emergency Funds",amount:500},
+    {section:"SAVINGS ALLOCATION",category:"Buffer",amount:386}
+  ],
+  groceries:[
+    ["Protein","Boneless skinless chicken thighs",3,"lb",6,18,"Main meal prep protein"],
+    ["Protein","Ground turkey or ground beef",1,"lb",8,8,"For bowls or mapo tofu"],
+    ["Protein","Eggs",12,"count",0.5,6,"Breakfast and fried rice"],
+    ["Protein","Firm tofu",1,"block",3,3,"For mapo tofu or stir fry"],
+    ["Beans","Dried black or pinto beans",1,"lb",3,3,"Instant Pot batch"],
+    ["Carbs","Rice",5,"lb bag",10,10,"Lasts multiple weeks"],
+    ["Carbs","Oats",1,"container",4.5,4.5,"Lasts multiple weeks"],
+    ["Carbs","Potatoes",3,"lb",1.5,4.5,"Curry and braised meals"],
+    ["Carbs","Frozen waffles",1,"box",4.5,4.5,"Check ingredients for dairy"],
+    ["Vegetables","Frozen broccoli",2,"lb",3,6,"Meal prep"],
+    ["Vegetables","Carrots",2,"lb",1.25,2.5,"Curry and braised meals"],
+    ["Vegetables","Onions",3,"count",0.9,2.7,"Cooking base"],
+    ["Fruit","Bananas",7,"count",0.35,2.45,"Breakfast and shakes"],
+    ["Dairy-free","Unsweetened soy milk",0.5,"gallon",4,4,"Oats and shakes"],
+    ["Calories","Peanut butter",1,"jar",4,4,"Waffles and shakes"],
+    ["Pantry","Olive oil",1,"weekly allowance",3,3,"Estimated portion used"],
+    ["Pantry","Garlic and seasonings",1,"weekly allowance",3,3,"Estimated portion used"],
+    ["Pantry","Soy sauce / curry sauce",1,"weekly allowance",3,3,"Estimated portion used"]
+  ].map((r,i)=>({id:i+1,category:r[0],item:r[1],qty:r[2],unit:r[3],unitPrice:r[4],cost:r[5],notes:r[6],checked:false})),
+  workouts:{
+    A:[
+      ["Leg Press",3,"8-12",120,"2-3","Leg press","Controlled depth; do not lock knees aggressively"],
+      ["Chest Press",3,"8-12",120,"2-3","Chest press machine","Keep shoulders stable"],
+      ["Lat Pulldown",3,"8-12",90,"2-3","Lat pulldown","Pull toward upper chest"],
+      ["Dumbbell Romanian Deadlift",3,"8-12",120,"2-3","Dumbbells","Hinge at hips; keep back neutral"],
+      ["Dumbbell Lateral Raise",2,"12-20",60,"1-2","Dumbbells","Light weight; controlled reps"],
+      ["Dumbbell Curl",2,"10-15",60,"1-2","Dumbbells","No swinging"],
+      ["Abdominal Crunch Machine",2,"12-15",60,"2","Ab machine","Controlled movement"]
+    ],
+    B:[
+      ["Leg Press",3,"10-15",120,"2-3","Leg press","Use a different foot position only if comfortable"],
+      ["Shoulder Press",3,"8-12",120,"2-3","Shoulder press machine","Do not force painful range of motion"],
+      ["Seated Low Row",3,"8-12",90,"2-3","Low row machine","Squeeze shoulder blades gently"],
+      ["Leg Curl",3,"10-15",90,"1-2","Leg curl machine","Control lowering"],
+      ["Leg Extension",2,"12-15",75,"1-2","Leg extension machine","Controlled reps"],
+      ["Dumbbell Chest Press",2,"8-12",90,"2-3","Dumbbells and bench","Use machine chest press if no suitable bench"],
+      ["Dumbbell Overhead Triceps Extension",2,"10-15",60,"1-2","Dumbbell","Use comfortable range of motion"],
+      ["Plank",2,"30-60 sec",60,"2","Mat","Stop before form breaks"]
+    ]
+  },
+  workoutLogs:[],
+  weighIns:[]
+};
+
+function clone(x){return JSON.parse(JSON.stringify(x))}
+let state;
+try{
+  const raw=localStorage.getItem(STORAGE_KEY);
+  state=raw?Object.assign(clone(DEFAULT),JSON.parse(raw)):clone(DEFAULT);
+}catch(e){state=clone(DEFAULT)}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderDashboard()}
+
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const money=n=>Number(n||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2});
+const todayISO=()=>new Date().toISOString().slice(0,10);
+
+$("#datePill").textContent=new Date().toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+$("#weighDate").value=todayISO();
+
+$("#nav").addEventListener("click",e=>{
+  const btn=e.target.closest("button[data-view]"); if(!btn)return;
+  $$("#nav button").forEach(b=>b.classList.toggle("active",b===btn));
+  $$(".view").forEach(v=>v.classList.toggle("active",v.id===btn.dataset.view));
+});
+
+function budgetTotals(){
+  const income=state.budget.filter(x=>x.section==="INCOME").reduce((a,b)=>a+Number(b.amount||0),0);
+  const expenses=state.budget.filter(x=>x.section==="EXPENSES").reduce((a,b)=>a+Number(b.amount||0),0);
+  const savings=state.budget.filter(x=>x.section==="SAVINGS ALLOCATION").reduce((a,b)=>a+Number(b.amount||0),0);
+  return {income,expenses,savings,free:income-expenses-savings};
+}
+function renderBudget(){
+  $("#budgetBody").innerHTML=state.budget.map((r,i)=>`
+    <tr><td><span class="pill">${r.section}</span></td><td>${r.category}</td>
+    <td><input class="money budget-input" data-i="${i}" type="number" step="1" value="${r.amount}"></td></tr>`).join("");
+  const t=budgetTotals();
+  $("#budgetIncomeMetric").textContent=money(t.income);
+  $("#budgetExpenseMetric").textContent=money(t.expenses);
+  $("#budgetSavingsMetric").textContent=money(t.savings);
+  $$(".budget-input").forEach(inp=>inp.addEventListener("input",()=>{
+    state.budget[+inp.dataset.i].amount=Number(inp.value||0); save(); renderBudgetMetricsOnly();
+  }));
+}
+function renderBudgetMetricsOnly(){
+  const t=budgetTotals();
+  $("#budgetIncomeMetric").textContent=money(t.income);$("#budgetExpenseMetric").textContent=money(t.expenses);$("#budgetSavingsMetric").textContent=money(t.savings);
+}
+
+function groceryTotal(){return state.groceries.reduce((a,g)=>a+Number(g.qty||0)*Number(g.unitPrice||0),0)}
+function renderGroceries(){
+  $("#groceryBody").innerHTML=state.groceries.map((g,i)=>`
+  <tr class="${g.checked?"grocery-done":""}">
+    <td><input class="check grocery-check" data-i="${i}" type="checkbox" ${g.checked?"checked":""}></td>
+    <td>${g.category}</td><td class="item-name"><strong>${g.item}</strong></td>
+    <td><input class="qty grocery-qty" data-i="${i}" type="number" step="0.1" value="${g.qty}"></td>
+    <td class="hide-mobile">${g.unit}</td>
+    <td><input class="money grocery-price" data-i="${i}" type="number" step="0.01" value="${g.unitPrice}"></td>
+    <td>$${money(g.qty*g.unitPrice)}</td><td class="hide-mobile muted">${g.notes}</td>
+  </tr>`).join("");
+  const total=groceryTotal();
+  $("#groceryTotal").textContent=money(total);
+  $("#groceryMonthly").textContent=money(total*4.33);
+  $("#groceryChecked").textContent=`${state.groceries.filter(x=>x.checked).length}/${state.groceries.length}`;
+  $$(".grocery-check").forEach(el=>el.addEventListener("change",()=>{state.groceries[+el.dataset.i].checked=el.checked;save();renderGroceries()}));
+  $$(".grocery-qty").forEach(el=>el.addEventListener("change",()=>{state.groceries[+el.dataset.i].qty=Number(el.value||0);save();renderGroceries()}));
+  $$(".grocery-price").forEach(el=>el.addEventListener("change",()=>{state.groceries[+el.dataset.i].unitPrice=Number(el.value||0);save();renderGroceries()}));
+}
+$("#resetGroceries").onclick=()=>{state.groceries.forEach(g=>g.checked=false);save();renderGroceries()};
+
+let currentWorkout="A";
+function lastExercisePerformance(exercise){
+  for(let i=state.workoutLogs.length-1;i>=0;i--){
+    const hit=state.workoutLogs[i].exercises.find(e=>e.name===exercise);
+    if(hit)return hit;
+  }
+  return null;
+}
+function renderWorkout(){
+  $$(".workout-toggle button").forEach(b=>{b.classList.toggle("primary",b.dataset.workout===currentWorkout)});
+  const list=state.workouts[currentWorkout];
+  $("#exerciseList").innerHTML=list.map((e,idx)=>{
+    const [name,sets,reps,rest,rir,equipment,notes]=e;
+    const last=lastExercisePerformance(name);
+    return `<div class="exercise-card" data-ex="${idx}">
+      <div class="exercise-head">
+        <div><div class="exercise-title">${name}</div><div class="exercise-meta">${sets} sets · ${reps} reps · ${rest}s rest · target ${rir} RIR</div></div>
+        <span class="pill">${equipment}</span>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:6px">${notes}</div>
+      ${last?`<div style="font-size:12px;margin-top:8px"><strong>Last:</strong> ${last.sets.map(s=>`${s.weight||0} lb × ${s.reps||0}`).join(" · ")}</div>`:""}
+      <div class="set-grid">
+        <div class="label">Set</div><div class="label">Weight</div><div class="label">Reps</div><div class="label">RIR</div>
+        ${Array.from({length:sets},(_,s)=>`<div class="label">${s+1}</div>
+          <input class="set-weight" data-ex="${idx}" data-set="${s}" type="number" step="2.5" placeholder="lb">
+          <input class="set-reps" data-ex="${idx}" data-set="${s}" type="number" step="1" placeholder="reps">
+          <input class="set-rir" data-ex="${idx}" data-set="${s}" type="number" step="1" min="0" max="10" placeholder="${rir.split("-")[0]}">`).join("")}
+      </div>
+    </div>`
+  }).join("");
+  renderLastSession();
+}
+$$(".workout-toggle button").forEach(b=>b.onclick=()=>{currentWorkout=b.dataset.workout;renderWorkout()});
+$("#saveWorkout").onclick=()=>{
+  const exercises=state.workouts[currentWorkout].map((e,idx)=>{
+    const sets=[];
+    $$(`.exercise-card[data-ex="${idx}"] .set-weight`).forEach((w,s)=>{
+      const r=$(`.set-reps[data-ex="${idx}"][data-set="${s}"]`);
+      const rir=$(`.set-rir[data-ex="${idx}"][data-set="${s}"]`);
+      sets.push({weight:Number(w.value||0),reps:Number(r.value||0),rir:Number(rir.value||0)});
+    });
+    return {name:e[0],sets};
+  });
+  const hasData=exercises.some(e=>e.sets.some(s=>s.weight||s.reps));
+  if(!hasData){alert("Enter at least one set before saving.");return}
+  state.workoutLogs.push({date:new Date().toISOString(),workout:currentWorkout,exercises});
+  save(); renderWorkout(); alert("Workout saved.");
+}
+function renderLastSession(){
+  const last=state.workoutLogs[state.workoutLogs.length-1];
+  if(!last){$("#lastSessionSummary").className="empty";$("#lastSessionSummary").textContent="No sessions logged yet.";return}
+  $("#lastSessionSummary").className="";
+  $("#lastSessionSummary").innerHTML=`<div class="stat-list" style="margin-top:12px">
+    <div class="stat-line"><span>Date</span><strong>${new Date(last.date).toLocaleDateString()}</strong></div>
+    <div class="stat-line"><span>Workout</span><strong>${last.workout}</strong></div>
+    <div class="stat-line"><span>Exercises</span><strong>${last.exercises.length}</strong></div>
+  </div>`;
+}
+
+function renderProgress(){
+  const arr=[...state.weighIns].sort((a,b)=>a.date.localeCompare(b.date));
+  const latest=arr[arr.length-1];
+  $("#latestWeight").textContent=latest?latest.weight.toFixed(1):"—";
+  const last7=arr.slice(-7);
+  $("#avg7").textContent=last7.length?(last7.reduce((a,b)=>a+b.weight,0)/last7.length).toFixed(1):"—";
+  $("#weightChange").textContent=arr.length?(arr[arr.length-1].weight-arr[0].weight).toFixed(1):"—";
+  $("#weightHistory").innerHTML=arr.length?arr.slice(-10).reverse().map((w,i)=>`
+    <div class="stat-line" style="padding:9px 0;border-bottom:1px solid #edf0f3"><span>${new Date(w.date+"T12:00:00").toLocaleDateString()}</span><strong>${w.weight.toFixed(1)} lb</strong></div>`).join(""):`<div class="empty">Add your first weigh-in.</div>`;
+  renderWeightChart(arr.slice(-20));
+}
+function renderWeightChart(arr){
+  const el=$("#weightChart");
+  if(!arr.length){el.innerHTML=`<div class="empty" style="width:100%;align-self:center">No weight data yet.</div>`;return}
+  const vals=arr.map(x=>x.weight), min=Math.min(...vals), max=Math.max(...vals), range=Math.max(1,max-min);
+  el.innerHTML=arr.map(x=>{
+    const h=25+((x.weight-min)/range)*130;
+    return `<div class="bar" style="height:${h}px"><span>${x.weight.toFixed(1)} lb · ${x.date}</span></div>`
+  }).join("");
+}
+$("#addWeight").onclick=()=>{
+  const date=$("#weighDate").value, weight=Number($("#weighWeight").value);
+  if(!date||!weight){alert("Enter a date and weight.");return}
+  const existing=state.weighIns.find(x=>x.date===date);
+  if(existing)existing.weight=weight; else state.weighIns.push({date,weight});
+  state.weighIns.sort((a,b)=>a.date.localeCompare(b.date));
+  $("#weighWeight").value=""; save();renderProgress();
+}
+
+function renderSettings(){
+  $("#startWeight").value=state.settings.startWeight;
+  $("#goalWeight").value=state.settings.goalWeight;
+  $("#proteinMin").value=state.settings.proteinMin;
+  $("#proteinMax").value=state.settings.proteinMax;
+}
+$("#saveSettings").onclick=()=>{
+  state.settings.startWeight=Number($("#startWeight").value||120);
+  state.settings.goalWeight=Number($("#goalWeight").value||130);
+  state.settings.proteinMin=Number($("#proteinMin").value||90);
+  state.settings.proteinMax=Number($("#proteinMax").value||120);
+  save();renderSettings();alert("Settings saved.");
+}
+
+function renderDashboard(){
+  const arr=[...state.weighIns].sort((a,b)=>a.date.localeCompare(b.date));
+  const current=arr.length?arr[arr.length-1].weight:state.settings.startWeight;
+  const start=state.settings.startWeight, goal=state.settings.goalWeight;
+  const pct=Math.max(0,Math.min(100,((current-start)/(goal-start||1))*100));
+  $("#dashWeight").innerHTML=`${current.toFixed(1)} <small>lb</small>`;
+  $("#dashWeightSub").textContent=`Goal: ${goal} lb`;
+  $("#dashProtein").textContent=`${state.settings.proteinMin}–${state.settings.proteinMax}`;
+  $("#dashGroceries").textContent=money(groceryTotal());
+  $("#dashBuffer").textContent=money(budgetTotals().free);
+  $("#goalProgressText").textContent=`${current.toFixed(1)} → ${goal} lb`;
+  $("#goalPct").textContent=`${pct.toFixed(0)}%`;
+  $("#goalProgressBar").style.width=`${pct}%`;
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=`bulk-os-backup-${todayISO()}.json`;a.click();URL.revokeObjectURL(url);
+}
+$("#exportBtn").onclick=exportData;$("#exportBtn2").onclick=exportData;
+$("#importFile").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const obj=JSON.parse(await f.text());state=obj;save();renderAll();alert("Backup imported.");}
+  catch(err){alert("Could not import that JSON file.");}
+  e.target.value="";
+});
+$("#resetAll").onclick=()=>{
+  if(confirm("Reset all Bulk OS data on this browser?")){
+    state=clone(DEFAULT);save();renderAll();
+  }
+};
+
+function renderAll(){
+  renderBudget();renderGroceries();renderWorkout();renderProgress();renderSettings();renderDashboard();
+}
+renderAll();
+</script>
+</body>
+</html>
